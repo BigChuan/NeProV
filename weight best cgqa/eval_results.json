@@ -1,0 +1,185 @@
+{
+  "val_metric": "AUC",
+  "best_epoch": 6,
+  "best_score": 0.171,
+  "train_losses": [
+    7.848898821941747,
+    5.5008972064899435,
+    4.918280181862113,
+    4.4803513846318115,
+    4.088752410757287,
+    3.3864222563927076,
+    2.988984152143755,
+    2.650437240362734
+  ],
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 7.848898821941747,
+      "val": {
+        "best_seen": 0.4323,
+        "best_unseen": 0.3793,
+        "best_hm": 0.3146,
+        "AUC": 0.1396,
+        "attr_acc": 0.4386,
+        "obj_acc": 0.5773
+      },
+      "test": {
+        "best_seen": 0.4287,
+        "best_unseen": 0.368,
+        "best_hm": 0.3182,
+        "AUC": 0.1387,
+        "attr_acc": 0.4555,
+        "obj_acc": 0.5873
+      }
+    },
+    {
+      "epoch": 2,
+      "train_loss": 5.5008972064899435,
+      "val": {
+        "best_seen": 0.445,
+        "best_unseen": 0.4041,
+        "best_hm": 0.3344,
+        "AUC": 0.1544,
+        "attr_acc": 0.4485,
+        "obj_acc": 0.5806
+      },
+      "test": {
+        "best_seen": 0.4514,
+        "best_unseen": 0.3855,
+        "best_hm": 0.3309,
+        "AUC": 0.1538,
+        "attr_acc": 0.471,
+        "obj_acc": 0.603
+      }
+    },
+    {
+      "epoch": 3,
+      "train_loss": 4.918280181862113,
+      "val": {
+        "best_seen": 0.4572,
+        "best_unseen": 0.4013,
+        "best_hm": 0.3331,
+        "AUC": 0.1579,
+        "attr_acc": 0.4545,
+        "obj_acc": 0.5867
+      },
+      "test": {
+        "best_seen": 0.4537,
+        "best_unseen": 0.389,
+        "best_hm": 0.3409,
+        "AUC": 0.1571,
+        "attr_acc": 0.4737,
+        "obj_acc": 0.6038
+      }
+    },
+    {
+      "epoch": 4,
+      "train_loss": 4.4803513846318115,
+      "val": {
+        "best_seen": 0.4686,
+        "best_unseen": 0.422,
+        "best_hm": 0.3476,
+        "AUC": 0.1705,
+        "attr_acc": 0.4646,
+        "obj_acc": 0.5915
+      },
+      "test": {
+        "best_seen": 0.4626,
+        "best_unseen": 0.4021,
+        "best_hm": 0.3462,
+        "AUC": 0.1643,
+        "attr_acc": 0.4845,
+        "obj_acc": 0.6138
+      }
+    },
+    {
+      "epoch": 5,
+      "train_loss": 4.088752410757287,
+      "val": {
+        "best_seen": 0.4713,
+        "best_unseen": 0.4175,
+        "best_hm": 0.3447,
+        "AUC": 0.1681,
+        "attr_acc": 0.4512,
+        "obj_acc": 0.5977
+      },
+      "test": {
+        "best_seen": 0.4573,
+        "best_unseen": 0.4187,
+        "best_hm": 0.3551,
+        "AUC": 0.1689,
+        "attr_acc": 0.4784,
+        "obj_acc": 0.6173
+      }
+    },
+    {
+      "epoch": 6,
+      "train_loss": 3.3864222563927076,
+      "val": {
+        "best_seen": 0.4702,
+        "best_unseen": 0.4222,
+        "best_hm": 0.3512,
+        "AUC": 0.171,
+        "attr_acc": 0.457,
+        "obj_acc": 0.5974
+      },
+      "test": {
+        "best_seen": 0.4674,
+        "best_unseen": 0.4327,
+        "best_hm": 0.3657,
+        "AUC": 0.1793,
+        "attr_acc": 0.4833,
+        "obj_acc": 0.6195
+      }
+    },
+    {
+      "epoch": 7,
+      "train_loss": 2.988984152143755,
+      "val": {
+        "best_seen": 0.467,
+        "best_unseen": 0.4273,
+        "best_hm": 0.3477,
+        "AUC": 0.1703,
+        "attr_acc": 0.4544,
+        "obj_acc": 0.6001
+      },
+      "test": {
+        "best_seen": 0.4621,
+        "best_unseen": 0.4231,
+        "best_hm": 0.3605,
+        "AUC": 0.1749,
+        "attr_acc": 0.4804,
+        "obj_acc": 0.6175
+      }
+    },
+    {
+      "epoch": 8,
+      "train_loss": 2.650437240362734,
+      "val": {
+        "best_seen": 0.4716,
+        "best_unseen": 0.4242,
+        "best_hm": 0.3464,
+        "AUC": 0.1707,
+        "attr_acc": 0.4556,
+        "obj_acc": 0.5964
+      },
+      "test": {
+        "best_seen": 0.4603,
+        "best_unseen": 0.4301,
+        "best_hm": 0.3623,
+        "AUC": 0.176,
+        "attr_acc": 0.4782,
+        "obj_acc": 0.6159
+      }
+    }
+  ],
+  "final_test": {
+    "best_seen": 0.4674,
+    "best_unseen": 0.4327,
+    "best_hm": 0.3657,
+    "AUC": 0.1793,
+    "attr_acc": 0.4833,
+    "obj_acc": 0.6195
+  }
+}

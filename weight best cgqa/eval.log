@@ -1,0 +1,18 @@
+args: Namespace(config='CAMS/configs/cgqa.yml', dataset_path='/data/hechuan/DPT-LORA2/download_data/data/cgqa', splitname='compositional-split-natural', open_world=False, seed=0, bias=1000.0, weight_decay=1e-05, save_every_n=5, topk=1, threshold=0.4228139529, threshold_trials=50, model_name='CAMS', prompt_template=['a photo of x x', 'a photo of x', 'a photo of x'], ctx_init=['a photo of ', 'a photo of ', 'a photo of '], clip_model='ViT-L/14', num_units=32, m_layers=24, adapter_dim=128, dataset='cgqa', step_size=5, gamma=0.5, lr=0.0001, ls=0.02, attr_dropout=0.2, train_batch_size=64, epochs=8, context_length=8, val_metric='AUC', save_final_model=True, save_path='CAMS/weight', att_loss_weight=0.5, obj_loss_weight=0.5, com_loss_weight=0.5, glb_loss_weight=0.5, eval_batch_size=64, feasibility='CAMS/feasibilities/feasibility_cgqa.pt', beta=0.85, load_model=False)
+epoch 1 val:  best_seen  0.4323| best_unseen  0.3793| best_hm  0.3146| AUC  0.1396| attr_acc  0.4386| obj_acc  0.5773|
+epoch 1 test: best_seen  0.4287| best_unseen  0.368| best_hm  0.3182| AUC  0.1387| attr_acc  0.4555| obj_acc  0.5873|
+epoch 2 val:  best_seen  0.445| best_unseen  0.4041| best_hm  0.3344| AUC  0.1544| attr_acc  0.4485| obj_acc  0.5806|
+epoch 2 test: best_seen  0.4514| best_unseen  0.3855| best_hm  0.3309| AUC  0.1538| attr_acc  0.471| obj_acc  0.603|
+epoch 3 val:  best_seen  0.4572| best_unseen  0.4013| best_hm  0.3331| AUC  0.1579| attr_acc  0.4545| obj_acc  0.5867|
+epoch 3 test: best_seen  0.4537| best_unseen  0.389| best_hm  0.3409| AUC  0.1571| attr_acc  0.4737| obj_acc  0.6038|
+epoch 4 val:  best_seen  0.4686| best_unseen  0.422| best_hm  0.3476| AUC  0.1705| attr_acc  0.4646| obj_acc  0.5915|
+epoch 4 test: best_seen  0.4626| best_unseen  0.4021| best_hm  0.3462| AUC  0.1643| attr_acc  0.4845| obj_acc  0.6138|
+epoch 5 val:  best_seen  0.4713| best_unseen  0.4175| best_hm  0.3447| AUC  0.1681| attr_acc  0.4512| obj_acc  0.5977|
+epoch 5 test: best_seen  0.4573| best_unseen  0.4187| best_hm  0.3551| AUC  0.1689| attr_acc  0.4784| obj_acc  0.6173|
+epoch 6 val:  best_seen  0.4702| best_unseen  0.4222| best_hm  0.3512| AUC  0.171| attr_acc  0.457| obj_acc  0.5974|
+epoch 6 test: best_seen  0.4674| best_unseen  0.4327| best_hm  0.3657| AUC  0.1793| attr_acc  0.4833| obj_acc  0.6195|
+epoch 7 val:  best_seen  0.467| best_unseen  0.4273| best_hm  0.3477| AUC  0.1703| attr_acc  0.4544| obj_acc  0.6001|
+epoch 7 test: best_seen  0.4621| best_unseen  0.4231| best_hm  0.3605| AUC  0.1749| attr_acc  0.4804| obj_acc  0.6175|
+epoch 8 val:  best_seen  0.4716| best_unseen  0.4242| best_hm  0.3464| AUC  0.1707| attr_acc  0.4556| obj_acc  0.5964|
+epoch 8 test: best_seen  0.4603| best_unseen  0.4301| best_hm  0.3623| AUC  0.176| attr_acc  0.4782| obj_acc  0.6159|
+final_test: best_seen  0.4674| best_unseen  0.4327| best_hm  0.3657| AUC  0.1793| attr_acc  0.4833| obj_acc  0.6195|

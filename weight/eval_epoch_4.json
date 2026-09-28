@@ -1,0 +1,20 @@
+{
+  "epoch": 4,
+  "train_loss": 6.779687801160311,
+  "val": {
+    "best_seen": 0.5103,
+    "best_unseen": 0.5731,
+    "best_hm": 0.4258,
+    "AUC": 0.2558,
+    "attr_acc": 0.3815,
+    "obj_acc": 0.5864
+  },
+  "test": {
+    "best_seen": 0.4996,
+    "best_unseen": 0.542,
+    "best_hm": 0.4006,
+    "AUC": 0.2308,
+    "attr_acc": 0.3831,
+    "obj_acc": 0.5598
+  }
+}

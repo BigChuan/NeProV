@@ -1,0 +1,259 @@
+
+import torch
+import torch.nn as nn
+from collections import OrderedDict
+from utils import LayerNorm,QuickGELU,Adapter,CrossAttentionBlock,CrossAttentionLayer,VAdapter,Transformer as Trs
+
+
+class ResidualAttentionBlock(nn.Module):
+    def __init__(
+            self,
+            d_model: int,
+            n_head: int,
+            attn_mask: torch.Tensor = None,
+            pos=0,
+            args=None
+    ):
+        super().__init__()
+        self.pos = pos
+        self.attn = nn.MultiheadAttention(
+            d_model, n_head
+        )
+        self.ln_1 = LayerNorm(d_model)
+        self.mlp = nn.Sequential(
+            OrderedDict(
+                [
+                    ("c_fc", nn.Linear(d_model, d_model * 4)),
+                    ("gelu", QuickGELU()),
+                    ("c_proj", nn.Linear(d_model * 4, d_model)),
+                ]
+            )
+        )
+        self.ln_2 = LayerNorm(d_model)
+        self.attn_mask = attn_mask
+        self.m_layers = args.m_layers
+        
+        # Fine-tune the visual encoder using LoRA. See "Parameter-Efficient Transfer Learning for NLP"
+        if self.pos >= 24 - self.m_layers:
+            self.adapter_attn = Adapter(d_model,args.adapter_dim,0.1)
+            self.adapter_fnn = Adapter(d_model,args.adapter_dim,0.1)
+            self.ln_latent = LayerNorm(d_model)
+
+    def attention(self, x: torch.Tensor):
+        self.attn_mask = (
+            self.attn_mask.to(dtype=x.dtype, device=x.device)
+            if self.attn_mask is not None
+            else None
+        )
+        return self.attn(x, x, x, need_weights=False, attn_mask=self.attn_mask)[0]
+    
+    def std(self,x):
+        adapt_x = self.adapter_attn(x,add_residual=False)
+        x = x + self.attention(self.ln_1(x)) # Clip attention
+        x = x + adapt_x
+        adapt_x = self.adapter_fnn(x,add_residual=False)
+        x = x + self.mlp(self.ln_2(x)) # Clip mlp
+        x = x + adapt_x
+        return x
+    
+    def forward(self, x):
+        x,latent_units,cross_attention = x
+        # Extract semantic features using Latent Queries.
+        if self.pos >= 24 - self.m_layers:
+            x = self.std(x) # Loading LoRA
+            latent_units = self.ln_latent(latent_units)
+            latent_units = cross_attention(latent_units,x)
+        else:
+            x = x + self.attention(self.ln_1(x)) # Clip attention
+            x = x + self.mlp(self.ln_2(x)) # Clip mlp
+
+        return x,latent_units,cross_attention
+    
+
+class Transformer(nn.Module):
+    def __init__(
+            self,
+            width: int,
+            layers: int,
+            heads: int,
+            attn_mask: torch.Tensor = None,
+            args=None
+    ):
+        super().__init__()
+        self.width = width
+        self.layers = layers
+        res_layers = []
+        for layer in range(layers):
+            res_layers.append(
+                ResidualAttentionBlock(
+                    width,
+                    heads,
+                    attn_mask=attn_mask,
+                    pos=layer,
+                    args=args
+                )
+            )
+        self.resblocks = nn.Sequential(*res_layers)
+
+    def forward(self, x):
+        return self.resblocks(x)
+
+class VisionTransformer(nn.Module):
+    def __init__(
+            self,
+            input_resolution: int,
+            patch_size: int,
+            width: int,
+            layers: int,
+            heads: int,
+            output_dim: int,
+            args
+    ):
+        super().__init__()
+        self.input_resolution = input_resolution
+        self.output_dim = output_dim
+        self.conv1 = nn.Conv2d(
+            in_channels=3,
+            out_channels=width,
+            kernel_size=patch_size,
+            stride=patch_size,
+            bias=False,
+        )
+        scale = width ** -0.5
+        self.class_embedding = nn.Parameter(scale * torch.randn(width))
+        self.positional_embedding = nn.Parameter(
+            scale * torch.randn((input_resolution // patch_size) ** 2 + 1, width)
+        )
+        self.ln_pre = LayerNorm(width)
+
+        self.transformer = Transformer(
+            width,
+            layers,
+            heads,
+            args=args
+        )
+        
+        self.ln_post = LayerNorm(width)
+        self.proj = nn.Parameter(scale * torch.randn(width, output_dim))
+ 
+        self.proj_att = nn.Parameter(scale * torch.randn(width, output_dim))
+        self.proj_obj = nn.Parameter(scale * torch.randn(width, output_dim))
+        self.proj_com = nn.Parameter(scale * torch.randn(width, output_dim))
+
+        self.latent_units = nn.Parameter(scale * torch.randn(args.num_units,width))
+        
+        self.drop = nn.Dropout(0.5)
+        # self.drop_last = nn.Dropout(0.3)
+        # self.pre_norm = LayerNorm(width)
+        self.ln_norm = LayerNorm(width)
+        
+        self.tr_a = Trs(width=1024,layers=1,heads=2,attn_drop=0.3,drop=0.3,batch_first=True)
+        self.tr_o = Trs(width=1024,layers=1,heads=2,attn_drop=0.3,drop=0.3,batch_first=True)
+        self.tr_c = Trs(width=1024,layers=1,heads=2,attn_drop=0.3,drop=0.3,batch_first=True)     
+        # self.tr_a = CrossAttentionBlock(d_model=1024,heads=1,attn_drop=0.1,drop=0.3)
+        # self.tr_o = CrossAttentionBlock(d_model=1024,heads=1,attn_drop=0.1,drop=0.3)
+        # self.tr_c = CrossAttentionBlock(d_model=1024,heads=1,attn_drop=0.1,drop=0.3)
+        self.cross_attention = VAdapter(dim=1024,num_heads=16,qkv_bias=False,drop=0.3,attn_drop=0.,proj_drop=0.)
+
+    def before(self, x):
+        x = self.conv1(x)
+        x = x.reshape(x.shape[0], x.shape[1], -1)
+        x = x.permute(0, 2, 1)
+        x = torch.cat([self.class_embedding.to(x.dtype)+ torch.zeros(x.shape[0], 1, x.shape[-1], dtype=x.dtype, device=x.device),x,],dim=1)
+        x = x + self.positional_embedding.to(x.dtype)
+        x = self.ln_pre(x)
+        x = x.permute(1, 0, 2)
+        return x
+
+    def forward(self, x: torch.Tensor):
+        batch_size = x.size(0)
+        x = self.before(x)
+        # Introduce latent_units for extracting features
+        # latent_units = self.drop(self.latent_units)
+        # latent_units = latent_units.unsqueeze(0).repeat(batch_size,1,1)
+        latent_units = self.drop(self.latent_units).unsqueeze(0).repeat(batch_size, 1, 1)  # [B,U,D]
+        
+        x,latent_units= self.transformer([x,latent_units,self.cross_attention])[:2]
+
+        # Multi-Space Disentanglement
+        # att_units = self.tr_a(latent_units[:,0,:], latent_units[:,1:,:].transpose(0,1))  # CLS as query
+        # obj_units = self.tr_o(latent_units[:,0,:], latent_units[:,1:,:].transpose(0,1))  # CLS as query
+        # com_units = self.tr_c(latent_units[:,0,:], latent_units[:,1:,:].transpose(0,1))  # CLS as query
+
+        # att_units = self.ln_norm(att_units)
+        # obj_units = self.ln_norm(obj_units)
+        # com_units = self.ln_norm(com_units)
+
+        # att_units = att_units @ self.proj_att
+        # obj_units = obj_units @ self.proj_obj
+        # com_units = com_units @ self.proj_com
+        
+        # att = self.drop_last(att_units)
+        # obj = self.drop_last(obj_units)
+        # com = self.drop_last(com_units)
+        
+        att_units = self.tr_a(latent_units)
+        obj_units = self.tr_o(latent_units)
+        com_units = self.tr_c(latent_units)
+
+        att_units = self.ln_norm(att_units.mean(1))
+        obj_units = self.ln_norm(obj_units.mean(1))
+        com_units = self.ln_norm(com_units.mean(1))
+
+        att_units = att_units @ self.proj_att
+        obj_units = obj_units @ self.proj_obj
+        com_units = com_units @ self.proj_com
+        
+        att = self.drop(att_units)
+        obj = self.drop(obj_units)
+        com = self.drop(com_units)
+        
+
+        ################################
+        
+        # glb representation
+        x = x.permute(1, 0, 2)     
+        x = self.ln_post(x[:,0,:]) # B, L, D           
+        glb = x @ self.proj 
+
+        return att,obj,com,glb
+    
+    
+
+
+
+class SharedPostTextCrossAttention(nn.Module):
+    """
+    Shared cross-attention applied *after* the CLIP text transformer blocks.
+
+    q  : [B, L, D]
+    kv : [B, L, D]
+    """
+    def __init__(self, dim: int, num_heads: int = 8, dropout: float = 0.1, mlp_ratio: float = 2.0):
+        super().__init__()
+        hidden = max(dim, int(dim * mlp_ratio))
+        self.norm_q = nn.LayerNorm(dim)
+        self.norm_kv = nn.LayerNorm(dim)
+        self.attn = nn.MultiheadAttention(
+            embed_dim=dim,
+            num_heads=num_heads,
+            dropout=dropout,
+            batch_first=True,
+        )
+        self.norm_out = nn.LayerNorm(dim)
+        self.mlp = nn.Sequential(
+            nn.Linear(dim, hidden),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden, dim),
+            nn.Dropout(dropout),
+        )
+
+    def forward(self, q: torch.Tensor, kv: torch.Tensor) -> torch.Tensor:
+        qn = self.norm_q(q)
+        kvn = self.norm_kv(kv)
+        cross = self.attn(qn, kvn, kvn, need_weights=False)[0]
+        q = q + cross
+        q = q + self.mlp(self.norm_out(q))
+        return q
+
